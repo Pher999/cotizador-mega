@@ -1,0 +1,43 @@
+{
+  "v": 2,
+  "actualizado": "2026-11-25",
+  "asesor": "Chris",
+  "anticipo": 100,
+  "mesesPromoDoble": 12,
+  "mesesPromoTriple": 12,
+  "mesesSoloInternet": [7, 13],
+  "nota": "Datos actuales proporcionados por el cliente.",
+  "paquetes": [
+    {"id": "d200", "tipo": "doble", "velocidad": 200, "promo": 350, "original": 400, "simetrico": true, "apps": [], "nota": ""},
+    {"id": "d300", "tipo": "doble", "velocidad": 300, "promo": 450, "original": 500, "simetrico": true, "apps": [], "nota": ""},
+    {"id": "d500", "tipo": "doble", "velocidad": 500, "promo": 650, "original": 700, "simetrico": true, "apps": [], "nota": ""},
+    {"id": "d1000", "tipo": "doble", "velocidad": 1000, "promo": 700, "original": 750, "simetrico": false, "apps": [], "nota": "Incluye módem WiFi Ultra adicional"},
+    {"id": "t200", "tipo": "triple", "velocidad": 200, "promo": 500, "original": 600, "simetrico": true, "apps": ["Netflix", "Prime Video"], "nota": ""},
+    {"id": "t300", "tipo": "triple", "velocidad": 300, "promo": 600, "original": 700, "simetrico": true, "apps": ["Netflix", "Prime Video"], "nota": ""},
+    {"id": "t500", "tipo": "triple", "velocidad": 500, "promo": 800, "original": 900, "simetrico": true, "apps": ["Netflix", "Prime Video"], "nota": ""},
+    {"id": "t1000", "tipo": "triple", "velocidad": 1000, "promo": 850, "original": 950, "simetrico": false, "apps": ["Netflix", "Prime Video"], "nota": "Incluye módem WiFi Ultra adicional"}
+  ],
+  "extras": [
+    {"id": "s1", "grupo": "app", "nombre": "Streaming+", "precio": 299, "detalle": "HBO Max, Netflix, Disney+ y Prime Video · Clave 5502 Triple / 5503 Doble", "tv": false, "cubre": ["HBO Max", "Netflix", "Disney+", "Prime Video"]},
+    {"id": "n1", "grupo": "app", "nombre": "Netflix Estándar con anuncios", "precio": 100, "precio2": 120, "detalle": "Incluido en Triple · Clave 3815 RES / 3816 EMP", "tv": false, "cubre": ["Netflix"]},
+    {"id": "n2", "grupo": "app", "nombre": "Netflix Estándar", "precio": 250, "detalle": "", "tv": false, "cubre": ["Netflix"]},
+    {"id": "n3", "grupo": "app", "nombre": "Netflix Premium", "precio": 339, "detalle": "", "tv": false, "cubre": ["Netflix"]},
+    {"id": "p1", "grupo": "app", "nombre": "Prime Video", "precio": 90, "detalle": "Solo en Doble; incluido en Triple · Clave 3815 RES / 3816 EMP", "tv": false, "cubre": ["Prime Video"], "soloDoble": true},
+    {"id": "h1", "grupo": "app", "nombre": "HBO Max Básico", "precio": 149, "detalle": "Clave 5494", "tv": false, "cubre": ["HBO Max"]},
+    {"id": "h2", "grupo": "app", "nombre": "HBO Max Estándar", "precio": 239, "detalle": "Clave 3813 RES / 3814 EMP", "tv": false, "cubre": ["HBO Max"]},
+    {"id": "y1", "grupo": "app", "nombre": "Disney+ Estándar con anuncios", "precio": 159, "detalle": "Clave 5592 · clientes activos: $80 por 3 meses", "tv": false, "cubre": ["Disney+"]},
+    {"id": "y2", "grupo": "app", "nombre": "Disney+ Estándar", "precio": 259, "detalle": "Clave 4566", "tv": false, "cubre": ["Disney+"]},
+    {"id": "y3", "grupo": "app", "nombre": "Disney+ Premium", "precio": 339, "detalle": "Clave 4572", "tv": false, "cubre": ["Disney+"]},
+    {"id": "f1", "grupo": "app", "nombre": "FOX+", "precio": 199, "detalle": "Clave 4100", "tv": false, "cubre": ["FOX+"]},
+    {"id": "ad1", "grupo": "app", "nombre": "Adult Pack", "precio": 175, "detalle": "", "tv": false, "cubre": []},
+    {"id": "x1", "grupo": "xview", "nombre": "Xview+ adicional", "precio": 50, "detalle": "Otro televisor · solo con paquete Triple", "tv": true, "soloTriple": true},
+    {"id": "c1", "grupo": "xview", "nombre": "Canales adicionales", "precio": 80, "detalle": "Para Xview+", "tv": false, "soloTriple": true, "cubre": []},
+    {"id": "m1", "grupo": "movil", "nombre": "Mega móvil Esencial", "precio": 100, "detalle": "6GB + redes ilimitadas, minutos y SMS", "tv": false},
+    {"id": "m2", "grupo": "movil", "nombre": "Mega móvil Conectado", "precio": 200, "detalle": "30GB + redes ilimitadas, minutos y SMS", "tv": false},
+    {"id": "m3", "grupo": "movil", "nombre": "Mega móvil Ilimitado", "precio": 300, "detalle": "Datos ilimitados + redes, minutos y SMS", "tv": false},
+    {"id": "m4", "grupo": "movil", "nombre": "Familiar 2 líneas", "precio": 270, "detalle": "1 de 30GB + 1 de 6GB", "tv": false},
+    {"id": "m5", "grupo": "movil", "nombre": "Familiar 3 líneas", "precio": 360, "detalle": "1 de 30GB + 2 de 6GB", "tv": false},
+    {"id": "m6", "grupo": "movil", "nombre": "Familiar 4 líneas", "precio": 450, "detalle": "1 de 30GB + 3 de 6GB", "tv": false},
+    {"id": "o1", "grupo": "otro", "nombre": "Extensor de wifi", "precio": 50, "detalle": "", "tv": false}
+  ]
+}

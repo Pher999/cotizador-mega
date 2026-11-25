@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cotizador MEGA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&family=Sora:wght@400;600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: two-pane workbench — captura a la izquierda, resultados fijos a la derecha; una columna en teléfono */
+:root{
+  --bg:#F2F6FC; --panel:#FFFFFF; --ink:#0B1F44; --muted:#4F6385; --line:#D7E1F0;
+  --brand:#0A2A6B; --brand-2:#1565D8; --sky:#5CB8FF; --sky-soft:#E3F0FF;
+  --movil:#C2410C; --movil-soft:#FFEDE3;
+  --good:#127A4A; --good-bg:#E2F5EA; --warn:#9A5B00; --warn-bg:#FFF1DA; --bad:#B42318; --bad-bg:#FDE8E6;
+  --display:"Sora", "Segoe UI", system-ui, sans-serif;
+  --body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --r:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#07142E; --panel:#0D1F44; --ink:#EAF2FF; --muted:#A7BADB; --line:#22396A;
+  --brand:#1565D8; --brand-2:#5CB8FF; --sky:#7CC6FF; --sky-soft:#13305F;
+  --movil:#FF9A5C; --movil-soft:#3A2214;
+  --good:#5BD69A; --good-bg:#103A2A; --warn:#F5B95C; --warn-bg:#3A2A10; --bad:#FF8A80; --bad-bg:#40181A;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.logo{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.5px;color:var(--brand-2)}
+.logo small{display:block;font-family:var(--body);font-weight:500;font-size:13px;color:var(--muted);letter-spacing:0}
+.btn{font:600 14px var(--body);border-radius:999px;padding:10px 16px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;min-height:42px}
+.btn:hover{border-color:var(--brand-2)}
+.btn.primary{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:6px 12px;min-height:34px;font-size:13px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,.chip:focus-visible,summary:focus-visible,.qty button:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:20px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.stack{display:flex;flex-direction:column;gap:20px;min-width:0}
+h2{font-family:var(--display);font-size:18px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--display);font-size:14px;margin:0;display:flex;align-items:center;gap:8px}
+.step{display:inline-block;font:600 11px var(--body);letter-spacing:1.2px;text-transform:uppercase;color:var(--brand-2);margin-bottom:6px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13px;color:var(--muted)}
+input[type=text],input[type=number],select{font:500 15px var(--body);color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+input[type=number]{font-variant-numeric:tabular-nums}
+.money{position:relative;display:block}
+.money::before{content:"$";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:600}
+.money input{padding-left:24px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 13px var(--body);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.block{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.block > .lbl{font-weight:600;font-size:13px;color:var(--muted)}
+.applist{display:flex;flex-direction:column;gap:8px}
+.approw{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.approw > span:first-child{min-width:120px;font-weight:600}
+.approw .money{width:130px}
+.pkgcard{margin-top:16px;border:2px solid var(--brand-2);background:var(--sky-soft);border-radius:12px;padding:16px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.pkgcard b{font-family:var(--display);font-size:16px;display:block}
+.pkgcard .meta{font-size:13px;color:var(--muted)}
+.pkgcard .p{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.pkgcard .p small{font-size:14px;font-weight:600}
+.pkgcard .after{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.group{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.group.movil h3{color:var(--movil)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--brand-2);display:inline-block}
+.group.movil .dot{background:var(--movil)}
+.extra{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.extra.on{border-color:var(--brand-2);background:var(--sky-soft)}
+.group.movil .extra.on{border-color:var(--movil);background:var(--movil-soft)}
+.extra .n{font-weight:600}
+.extra .pr{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font:700 18px var(--body);cursor:pointer}
+.qty button:disabled{opacity:.4;cursor:not-allowed}
+.qty output{min-width:22px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font:600 11px var(--body);padding:2px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn)}
+.results{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:900px){.results{position:static}}
+.hero{background:var(--brand);color:#fff;border-radius:var(--r);padding:20px}
+.hero .k{font-size:13px;color:#CFE4FF;font-weight:500}
+.hero .big{font-family:var(--display);font-weight:800;font-size:44px;line-height:1.05;font-variant-numeric:tabular-nums}
+.hero .sub{color:#D6EBFF;font-size:14px;margin-top:6px;font-variant-numeric:tabular-nums}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:12px}
+.cal div{border-radius:9px;padding:6px 2px;text-align:center;font-size:10.5px;line-height:1.25;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);min-width:0}
+.cal b{display:block;font-family:var(--display);font-size:13px;font-variant-numeric:tabular-nums;margin:1px 0}
+.cal .anticipo{background:#FFD43B;border-color:#FFD43B;color:#0A2A6B}
+.cal .ajuste{background:#FFF3BF;border-color:#FFD43B;color:#0A2A6B}
+.cal .solo{background:#2EE6C9;border-color:#2EE6C9;color:#05332D}
+.cal .regular{background:#0A2766;border-color:#0A2766;color:#FFFFFF}
+.calsum{margin:10px 0 0;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.calsum b{color:var(--ink)}
+.cmp{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin-top:14px}
+.cmp th,.cmp td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}
+.cmp th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.cmp td.mega{font-weight:700;color:var(--brand-2)}
+.cmp td:first-child{color:var(--muted);font-weight:600;width:34%}
+.verd{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.v{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:10px 12px;font-size:14px}
+.v.good{background:var(--good-bg);color:var(--good)}
+.v.warn{background:var(--warn-bg);color:var(--warn)}
+.v.bad{background:var(--bad-bg);color:var(--bad)}
+.v svg{flex:none;margin-top:2px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.actions .btn{flex:1 1 160px}
+.preview{margin-top:14px;flex-direction:column;gap:8px;display:flex}
+.preview img{border-radius:12px;border:1px solid var(--line);width:100%;max-width:100%}
+.status{font-size:13px;color:var(--muted);min-height:18px}
+details.cat summary{cursor:pointer;font-family:var(--display);font-weight:700;font-size:16px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.cat summary::-webkit-details-marker{display:none}
+.tbl{overflow-x:auto;margin-top:12px}
+.tbl table{border-collapse:collapse;width:100%;min-width:1020px}
+.tbl th{font-size:12px;color:var(--muted);text-align:left;padding:6px;font-weight:600}
+.tbl td{padding:4px 6px}
+.tbl input[type=text],.tbl input[type=number],.tbl select{min-height:38px;padding:6px 8px;font-size:14px}
+.del{background:none;border:none;color:var(--bad);cursor:pointer;font:600 13px var(--body);padding:8px}
+.badge-ex{font:600 11px var(--body);background:var(--warn-bg);color:var(--warn);padding:3px 10px;border-radius:999px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="logo">MEGA · Cotizador<small>Compara el servicio actual de tu cliente contra tu propuesta</small></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="badge-ex" id="exBadge">Ejemplo cargado</span>
+      <button class="btn" id="btnNueva" type="button">Nueva cotización</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="stack">
+      <section class="card" aria-labelledby="h1">
+        <span class="step">Paso 1</span>
+        <h2 id="h1">Servicio actual del cliente</h2>
+        <p class="hint">Lo que hoy paga y recibe con su compañía.</p>
+        <div class="fields">
+          <label class="f">Nombre del cliente (opcional)<input type="text" id="cNombre" placeholder="Araceli"></label>
+          <label class="f">Compañía actual
+            <select id="cCompania">
+              <option>izzi</option><option>Telmex</option><option>Totalplay</option><option>Starlink</option><option>Telcel Internet en Casa</option><option>Otra</option>
+            </select>
+          </label>
+          <label class="f">Gasto mensual<span class="money"><input type="number" id="cGasto" min="0" step="1" inputmode="numeric"></span></label>
+          <label class="f">Velocidad (megas)<input type="number" id="cVel" min="0" step="1" inputmode="numeric"></label>
+          <label class="f">Gasto de instalación<span class="money"><input type="number" id="cInst" min="0" step="1" inputmode="numeric"></span></label>
+          <label class="f">Gasto en celular al mes<span class="money"><input type="number" id="cCel" min="0" step="1" inputmode="numeric"></span></label>
+        </div>
+        <p class="hint" style="margin:8px 0 0">El gasto en celular solo entra a la comparativa si agregas Mega móvil.</p>
+        <div class="block">
+          <span class="lbl">¿Tiene servicio de TV?</span>
+          <div class="seg" role="group" aria-label="Servicio de TV">
+            <button type="button" class="chip" id="tvSi" aria-pressed="false">Sí, con TV</button>
+            <button type="button" class="chip" id="tvNo" aria-pressed="true">Solo internet</button>
+          </div>
+        </div>
+        <div class="block">
+          <span class="lbl">Apps incluidas en su paquete</span>
+          <div class="seg" id="cAppsIncl" role="group" aria-label="Apps incluidas"></div>
+        </div>
+        <div class="block">
+          <span class="lbl">Apps que paga por aparte</span>
+          <div class="seg" id="cAppsAparteSel" role="group" aria-label="Apps que paga por aparte"></div>
+          <div class="applist" id="cAppsAparteList"></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h2">
+        <span class="step">Paso 2</span>
+        <h2 id="h2">Tu paquete MEGA</h2>
+        <p class="hint">Elige tipo, velocidad y forma de pago.</p>
+        <div class="block" style="margin-top:0">
+          <span class="lbl">Tipo de paquete</span>
+          <div class="seg" id="selTipo" role="group" aria-label="Tipo de paquete"></div>
+        </div>
+        <div class="block">
+          <span class="lbl">Velocidad</span>
+          <div class="seg" id="selVel" role="group" aria-label="Velocidad"></div>
+        </div>
+        <div class="block">
+          <span class="lbl">Forma de pago</span>
+          <div class="seg" role="group" aria-label="Forma de pago">
+            <button type="button" class="chip" id="domSi" aria-pressed="true">Domicilia con débito</button>
+            <button type="button" class="chip" id="domNo" aria-pressed="false">Sin domiciliar</button>
+          </div>
+        </div>
+        <div class="pkgcard" id="pkgcard"></div>
+      </section>
+
+      <section class="card" aria-labelledby="h3">
+        <span class="step">Paso 3</span>
+        <h2 id="h3">Extras</h2>
+        <p class="hint">Agrega apps, Xview+ adicionales y líneas de Mega móvil.</p>
+        <div id="extras"></div>
+      </section>
+
+      <details class="card cat" id="catDetails">
+        <summary>Mi catálogo de paquetes y extras <span class="status" id="catStatus"></span></summary>
+        <p class="hint" style="margin-top:10px">Los cambios que hagas aquí se guardan solo en este dispositivo. Para que todos vean un precio nuevo, descarga el catálogo y súbelo a GitHub reemplazando <b>catalogo.json</b>.</p>
+        <div class="seg" style="margin-bottom:14px">
+          <button class="btn small" type="button" id="btnExport">Descargar catalogo.json</button>
+          <button class="btn small" type="button" id="btnReset">Volver a los precios del repositorio</button>
+        </div>
+        <div class="fields">
+          <label class="f">Nombre del asesor<input type="text" id="kAsesor"></label>
+          <label class="f">Anticipo MEGA<span class="money"><input type="number" id="kAnticipo" min="0" step="1"></span></label>
+          <label class="f">Meses de promoción del Doble<input type="number" id="kMesesD" min="1" max="36" step="1"></label>
+          <label class="f">Meses de promoción del Triple<input type="number" id="kMesesT" min="1" max="36" step="1"></label>
+          <label class="f">Meses en que el Triple cobra solo internet<input type="text" id="kSolo" placeholder="7, 13"></label>
+          <label class="f" style="grid-column:1/-1">Nota extra para la imagen<input type="text" id="kNota"></label>
+        </div>
+        <p class="hint" style="margin:8px 0 0">En los meses de solo internet se cobra el precio del Doble de la misma velocidad, con su promoción si sigue vigente.</p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Tipo</th><th>Megas</th><th>Precio promo domiciliado</th><th>Precio original</th><th>Simétrico</th><th>Apps incluidas (coma)</th><th>Nota</th><th></th></tr></thead>
+            <tbody id="kPkgs"></tbody>
+          </table>
+        </div>
+        <button class="btn small" type="button" id="addPkg" style="margin-top:8px">Agregar paquete</button>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Grupo</th><th>Extra</th><th>Precio/mes</th><th>Desde mes 7</th><th>Solo Triple</th><th>Detalle</th><th>Apps que cubre (coma)</th><th>Cuenta como TV</th><th></th></tr></thead>
+            <tbody id="kExtras"></tbody>
+          </table>
+        </div>
+        <button class="btn small" type="button" id="addExtra" style="margin-top:8px">Agregar extra</button>
+      </details>
+    </div>
+
+    <aside class="results" aria-labelledby="hr">
+      <div class="stack">
+        <div class="hero" id="hero" aria-live="polite"></div>
+        <section class="card" aria-labelledby="hm">
+          <h2 id="hm">Pagos mes a mes</h2>
+          <div class="cal" id="cal"></div>
+          <p class="calsum" id="calsum"></p>
+        </section>
+        <section class="card">
+          <h2 id="hr">Comparativa</h2>
+          <table class="cmp" id="cmp"></table>
+          <div class="verd" id="verd"></div>
+          <div class="actions">
+            <button class="btn primary" type="button" id="btnImgCmp">Imagen comparativa</button>
+            <button class="btn primary" type="button" id="btnImgMes">Imagen mes a mes</button>
+          </div>
+          <div class="status" id="imgStatus"></div>
+          <div class="preview" id="preview" hidden>
+            <img id="previewImg" alt="Imagen de la cotización para compartir con el cliente">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn" type="button" id="btnSave">Descargar PNG</button>
+            </div>
+            <p class="hint" style="margin:0">En el celular también puedes mantener presionada la imagen para guardarla o compartirla.</p>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+const APPS = ["Netflix","Prime Video","Disney+","HBO Max","FOX+","ViX","Claro video","Spotify","YouTube Premium","Paramount+"];
+const GRUPOS = {app:"Apps", xview:"Xview+ adicional", movil:"Mega móvil", otro:"Otros"};
+const TRIPLE_APPS = ["Netflix","Prime Video"];
+const DEFAULT_CAT = {
+  v: 2,
+  asesor: "Chris",
+  anticipo: 100,
+  mesesPromoDoble: 12,
+  mesesPromoTriple: 12,
+  mesesSoloInternet: [7, 13],
+  nota: "",
+  paquetes: [
+    {id:"d200", tipo:"doble", velocidad:200, promo:350, original:400, simetrico:true, apps:[], nota:""},
+    {id:"d300", tipo:"doble", velocidad:300, promo:450, original:500, simetrico:true, apps:[], nota:""},
+    {id:"d500", tipo:"doble", velocidad:500, promo:650, original:700, simetrico:true, apps:[], nota:""},
+    {id:"d1000", tipo:"doble", velocidad:1000, promo:700, original:750, simetrico:false, apps:[], nota:"Incluye módem WiFi Ultra adicional"},
+    {id:"t200", tipo:"triple", velocidad:200, promo:500, original:600, simetrico:true, apps:TRIPLE_APPS.slice(), nota:""},
+    {id:"t300", tipo:"triple", velocidad:300, promo:600, original:700, simetrico:true, apps:TRIPLE_APPS.slice(), nota:""},
+    {id:"t500", tipo:"triple", velocidad:500, promo:800, original:900, simetrico:true, apps:TRIPLE_APPS.slice(), nota:""},
+    {id:"t1000", tipo:"triple", velocidad:1000, promo:850, original:950, simetrico:false, apps:TRIPLE_APPS.slice(), nota:"Incluye módem WiFi Ultra adicional"}
+  ],
+  extras: []
+};
+const EXAMPLE = {
+  cliente:{nombre:"", compania:"Totalplay", gasto:800, velocidad:150, instalacion:0, celular:0, tv:true, apps:[], aparte:{}},
+  propuesta:{tipo:"triple", velocidad:300, domicilia:true, extras:{}}
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+let cat = clone(DEFAULT_CAT);
+let st = clone(EXAMPLE);
+let isExample = true;
+const $ = id => document.getElementById(id);
+const fmt = n => "$" + Math.round(n).toLocaleString("es-MX");
+const num = v => { const n = parseFloat(v); return isFinite(n) && n > 0 ? n : 0; };
+const uid = p => p + Math.random().toString(36).slice(2,8);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const velTxt = v => v >= 1000 ? (v/1000).toString().replace(".", ",") + " Giga" : v + " megas";
+const velMb = v => v >= 1000 ? (v/1000).toString().replace(".", ",") + " Giga" : v + " Mbps";
+const tipoTxt = t => t === "triple" ? "Triple Xview+" : "Doble";
+const promoMeses = t => Math.max(1, Math.round(num(t === "triple" ? (cat.mesesPromoTriple ?? cat.mesesPromo) : (cat.mesesPromoDoble ?? cat.mesesPromo)) || 12));
+const soloInt = () => Array.isArray(cat.mesesSoloInternet) ? cat.mesesSoloInternet : [7, 13];
+const mesesY = a => a.length > 1 ? a.slice(0, -1).join(", ") + " y " + a[a.length - 1] : String(a[0]);
+const listaY = a => a.length > 1 ? a.slice(0, -1).join(", ") + " y " + a[a.length - 1] : (a[0] || "");
+const HORIZONTE = 13;
+
+function descargar(blob, nombre){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---------- catálogo: catalogo.json del repositorio + cambios en este dispositivo ---------- */
+const LS_KEY = "mega-cat-github";
+let base = null;
+function validCat(o){ return o && o.v === 2 && Array.isArray(o.paquetes) && Array.isArray(o.extras); }
+function setStatus(t){ $("catStatus").textContent = t; }
+function saveCat(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({base: (base && base.actualizado) || "", cat})); setStatus("Cambios guardados en este dispositivo"); }
+  catch(e){ setStatus("No se pudieron guardar los cambios"); }
+}
+async function cargarCatalogo(){
+  try{
+    const res = await fetch("catalogo.json", {cache:"no-store"});
+    if(res.ok){ const d = await res.json(); if(validCat(d)) base = d; }
+  }catch(e){}
+  let local = null;
+  try{ local = JSON.parse(localStorage.getItem(LS_KEY) || "null"); }catch(e){}
+  if(local && validCat(local.cat) && (!base || local.base === (base.actualizado || ""))){ cat = local.cat; setStatus("Con cambios en este dispositivo"); }
+  else if(base){ cat = clone(base); setStatus(""); }
+  else setStatus("No se pudo cargar catalogo.json");
+  renderAll();
+}
+$("btnExport").addEventListener("click", () => {
+  const out = clone(cat); out.actualizado = new Date().toISOString().slice(0,10);
+  descargar(new Blob([JSON.stringify(out, null, 2)], {type:"application/json"}), "catalogo.json");
+});
+$("btnReset").addEventListener("click", () => {
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  cat = clone(base || DEFAULT_CAT); setStatus(base ? "Precios del repositorio" : ""); renderAll();
+});
+
+/* ---------- Paso 1 ---------- */
+function chipGroup(el, selected, onToggle){
+  el.innerHTML = APPS.map(a => `<button type="button" class="chip" aria-pressed="${selected.includes(a)}" data-a="${esc(a)}">${esc(a)}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => onToggle(b.dataset.a)));
+}
+function renderCliente(){
+  const c = st.cliente;
+  $("cNombre").value = c.nombre || "";
+  $("cCompania").value = c.compania;
+  $("cGasto").value = c.gasto || "";
+  $("cVel").value = c.velocidad || "";
+  $("cInst").value = c.instalacion || "";
+  $("cCel").value = c.celular || "";
+  $("tvSi").setAttribute("aria-pressed", c.tv);
+  $("tvNo").setAttribute("aria-pressed", !c.tv);
+  chipGroup($("cAppsIncl"), c.apps, a => { c.apps = c.apps.includes(a) ? c.apps.filter(x => x!==a) : c.apps.concat(a); touch(); renderCliente(); });
+  chipGroup($("cAppsAparteSel"), Object.keys(c.aparte), a => { if(a in c.aparte) delete c.aparte[a]; else c.aparte[a] = 0; touch(); renderCliente(); });
+  $("cAppsAparteList").innerHTML = Object.keys(c.aparte).map((a,i) =>
+    `<div class="approw"><span>${esc(a)}</span><span class="money"><input type="number" min="0" step="1" inputmode="numeric" id="ap-${i}" data-a="${esc(a)}" value="${c.aparte[a] || ""}" aria-label="Costo mensual de ${esc(a)}"></span><span class="hint" style="margin:0">al mes</span></div>`).join("");
+  $("cAppsAparteList").querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { c.aparte[inp.dataset.a] = num(inp.value); touch(); renderResults(); }));
+  renderResults();
+}
+
+/* ---------- Paso 2 ---------- */
+function findPkg(tipo, vel){ return cat.paquetes.find(p => p.tipo === tipo && p.velocidad === vel); }
+function renderPaquete(){
+  const p = st.propuesta;
+  const tipos = Array.from(new Set(cat.paquetes.map(k => k.tipo)));
+  if(!tipos.includes(p.tipo)) p.tipo = tipos[0];
+  const vels = cat.paquetes.filter(k => k.tipo === p.tipo).map(k => k.velocidad).sort((a,b) => a-b);
+  if(!vels.includes(p.velocidad)) p.velocidad = vels[0];
+  $("selTipo").innerHTML = tipos.map(t => `<button type="button" class="chip" data-t="${t}" aria-pressed="${t===p.tipo}">${tipoTxt(t)}</button>`).join("");
+  $("selTipo").querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => { p.tipo = b.dataset.t; touch(); renderPaquete(); renderExtras(); }));
+  $("selVel").innerHTML = vels.map(v => `<button type="button" class="chip" data-v="${v}" aria-pressed="${v===p.velocidad}">${velTxt(v)}</button>`).join("");
+  $("selVel").querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => { p.velocidad = +b.dataset.v; touch(); renderPaquete(); }));
+  $("domSi").setAttribute("aria-pressed", p.domicilia);
+  $("domNo").setAttribute("aria-pressed", !p.domicilia);
+  const k = findPkg(p.tipo, p.velocidad);
+  if(k){
+    const precio = p.domicilia ? k.promo : k.original;
+    const incl = ["Internet " + velTxt(k.velocidad) + (k.simetrico ? " simétrico" : ""), "telefonía fija"];
+    if(k.tipo === "triple") incl.push("TV Xview+");
+    if(k.apps.length) incl.push(k.apps.join(" y "));
+    $("pkgcard").innerHTML = `<div><b>${tipoTxt(k.tipo)} ${velTxt(k.velocidad)}</b><div class="meta">${esc(incl.join(" · "))}${k.nota ? "<br>" + esc(k.nota) : ""}</div></div>
+      <div style="text-align:right"><div class="p">${fmt(precio)}<small>/mes</small></div><div class="after">${p.domicilia ? `Meses 1 a ${promoMeses(k.tipo)} · después ` + fmt(k.original) : "Precio original"}</div></div>`;
+  } else {
+    $("pkgcard").innerHTML = `<div class="meta">No hay paquete con esa combinación en tu catálogo.</div>`;
+  }
+  renderResults();
+}
+$("domSi").addEventListener("click", () => { st.propuesta.domicilia = true; touch(); renderPaquete(); });
+$("domNo").addEventListener("click", () => { st.propuesta.domicilia = false; touch(); renderPaquete(); });
+
+/* ---------- Paso 3 ---------- */
+function renderExtras(){
+  const p = st.propuesta;
+  $("extras").innerHTML = Object.keys(GRUPOS).map(g => {
+    const items = cat.extras.filter(e => (e.grupo || "otro") === g);
+    if(!items.length) return "";
+    return `<div class="group ${g}"><h3><span class="dot" aria-hidden="true"></span>${GRUPOS[g]}</h3>` + items.map(e => {
+      const bloqueado = e.soloTriple && p.tipo !== "triple";
+      const q = bloqueado ? 0 : (p.extras[e.id] || 0);
+      const precioTxt = e.precio ? fmt(e.precio) + "/mes" + (e.precio2 && e.precio2 !== e.precio ? `, desde el mes 7 ${fmt(e.precio2)}` : "") : '<span class="tag">Precio por definir</span>';
+      return `<div class="extra${q ? " on" : ""}"><div><div class="n">${esc(e.nombre)}${bloqueado ? ' <span class="tag">Solo con Triple</span>' : ""}</div><div class="pr">${precioTxt}${e.detalle ? " · " + esc(e.detalle) : ""}</div></div>
+        <div class="qty"><button type="button" data-id="${e.id}" data-d="-1" aria-label="Quitar ${esc(e.nombre)}"${bloqueado ? " disabled" : ""}>−</button><output>${q}</output><button type="button" data-id="${e.id}" data-d="1" aria-label="Agregar ${esc(e.nombre)}"${bloqueado ? " disabled" : ""}>+</button></div></div>`;
+    }).join("") + `</div>`;
+  }).join("");
+  $("extras").querySelectorAll(".qty button").forEach(b => b.addEventListener("click", () => {
+    const id = b.dataset.id; p.extras[id] = Math.max(0, (p.extras[id] || 0) + Number(b.dataset.d)); touch(); renderExtras();
+  }));
+  renderResults();
+}
+
+/* ---------- cálculo: calendario de 13 meses ---------- */
+function calc(){
+  const c = st.cliente, p = st.propuesta;
+  const pkg = findPkg(p.tipo, p.velocidad) || {tipo:"doble", velocidad:0, promo:0, original:0, simetrico:false, apps:[]};
+  const N = promoMeses(pkg.tipo), Nd = promoMeses("doble");
+  const precioPromo = p.domicilia ? pkg.promo : pkg.original;
+  const dobleIgual = findPkg("doble", pkg.velocidad);
+  const solo = pkg.tipo === "triple" && dobleIgual ? soloInt() : [];
+  const extras = cat.extras.filter(e => (p.extras[e.id]||0) > 0 && !(e.soloTriple && pkg.tipo !== "triple")).map(e => ({...e, qty:p.extras[e.id]}));
+  const extrasTotal = extras.reduce((s,e) => s + e.precio*e.qty, 0);
+  const extrasDespues = extras.reduce((s,e) => s + (e.precio2 || e.precio)*e.qty, 0);
+  const extraApps = extras.filter(e => e.grupo === "app").flatMap(e => Array.isArray(e.cubre) ? e.cubre : [e.nombre]);
+  const appsMega = Array.from(new Set(pkg.apps.concat(extraApps)));
+  const aparteTotal = Object.values(c.aparte).reduce((s,v) => s + num(v), 0);
+  const cubiertas = Object.keys(c.aparte).filter(a => appsMega.includes(a));
+  const cubiertasTotal = cubiertas.reduce((s,a) => s + num(c.aparte[a]), 0);
+  const aparteResto = aparteTotal - cubiertasTotal;
+  const movil = extras.filter(e => e.grupo === "movil");
+  const conMovil = movil.length > 0;
+  const celular = conMovil ? num(c.celular) : 0;
+  const actual = num(c.gasto) + aparteTotal + celular;
+  const ant = num(cat.anticipo);
+  const paqueteMes = m => solo.includes(m)
+    ? ((p.domicilia && m <= Nd) ? dobleIgual.promo : dobleIgual.original)
+    : ((p.domicilia && m <= N) ? pkg.promo : pkg.original);
+  const reciboMes = m => paqueteMes(m) + (m <= 6 ? extrasTotal : extrasDespues);
+  const meses = [];
+  for(let m = 1; m <= HORIZONTE + 1; m++){
+    if(m === 1){ meses.push({m, monto:ant, tipo:"anticipo"}); continue; }
+    const tipo = solo.includes(m) ? "solo" : ((p.domicilia && m <= N) ? "promo" : "regular");
+    if(m === 2) meses.push({m, monto:Math.max(0, reciboMes(m) - ant), tipo:"ajuste", base:tipo});
+    else meses.push({m, monto:reciboMes(m), tipo});
+  }
+  const recibos13 = meses.slice(0, HORIZONTE).reduce((s,x) => s + x.monto, 0);
+  const mega13 = recibos13 + aparteResto*HORIZONTE;
+  const actual13 = actual*HORIZONTE;
+  const mes14 = meses[HORIZONTE].monto;
+  const precioMes = precioPromo + extrasTotal + aparteResto;
+  const megaTv = pkg.tipo === "triple" || extras.some(e => e.tv);
+  return {c, p, pkg, N, Nd, solo, dobleIgual, ant, precioPromo, precioMes, extras, extrasTotal, extrasDespues, appsMega, extraApps,
+    aparteTotal, cubiertas, cubiertasTotal, aparteResto, movil, conMovil, celular, actual, meses, recibos13, mega13, actual13,
+    ahorro13: actual13 - mega13, promedio13: mega13/HORIZONTE, promedioRecibo: recibos13/HORIZONTE, mes14, ahorro14: actual - (mes14 + aparteResto),
+    megaTv, pendientes: extras.filter(e => !e.precio)};
+}
+function etiquetaMes(r, x){
+  if(x.tipo === "anticipo") return "Anticipo";
+  if(x.tipo === "ajuste") return "−" + fmt(r.ant);
+  if(x.tipo === "solo") return "Solo internet";
+  if(x.tipo === "promo") return "Promoción";
+  return "Regular";
+}
+function soloVisibles(r){ return r.solo.filter(m => m >= 3 && m <= HORIZONTE + 1); }
+function ganancias(r){
+  const c = r.c, g = [], vc = num(c.velocidad), vm = r.pkg.velocidad;
+  if(vc && vm >= vc*1.8) g.push(vm >= vc*2.5 ? "más del doble de velocidad" : "el doble de velocidad");
+  else if(vc && vm > vc) g.push("más velocidad");
+  if(r.megaTv && !c.tv) g.push("TV con Xview+");
+  const nuevas = r.appsMega.filter(a => !c.apps.includes(a));
+  if(nuevas.length) g.push(listaY(nuevas) + (nuevas.length > 1 ? " incluidos" : " incluido"));
+  return g;
+}
+
+/* ---------- resultados en pantalla ---------- */
+const ICON = {
+  up:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+  eq:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
+  dn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>'
+};
+function renderResults(){
+  const r = calc(), c = r.c;
+  if(r.actual > 0 && r.ahorro13 > 0){
+    $("hero").innerHTML = `<div class="k">Tu cliente ahorra en 13 meses</div><div class="big">${fmt(r.ahorro13)}</div><div class="sub">Hoy: ${fmt(r.actual13)} en 13 meses · Con MEGA: ${fmt(r.mega13)} (promedio ${fmt(r.promedio13)}/mes)</div>`;
+  } else if(r.actual > 0){
+    $("hero").innerHTML = `<div class="k">Diferencia en 13 meses</div><div class="big">${r.ahorro13 === 0 ? fmt(0) : "+" + fmt(-r.ahorro13)}</div><div class="sub">Hoy: ${fmt(r.actual13)} · Con MEGA: ${fmt(r.mega13)}. Revisa lo que gana a cambio.</div>`;
+  } else {
+    $("hero").innerHTML = `<div class="k">Pago promedio en 13 meses</div><div class="big">${fmt(r.promedioRecibo)}<small style="font-size:18px">/mes</small></div><div class="sub">Total ${fmt(r.recibos13)} · desde el mes 14 ${fmt(r.mes14)}/mes</div>`;
+  }
+  $("cal").innerHTML = r.meses.map((x,i) => `<div class="${x.tipo}"><span>${i === HORIZONTE ? "Mes 14+" : "Mes " + x.m}</span><b>${fmt(x.monto)}</b><span>${esc(etiquetaMes(r, x))}</span></div>`).join("");
+  $("calsum").innerHTML = `Total de los primeros 13 meses: <b>${fmt(r.recibos13)}</b> · promedio <b>${fmt(r.promedioRecibo)}</b>/mes · desde el mes 14: <b>${fmt(r.mes14)}</b>/mes`;
+  const appsHoy = c.apps.concat(Object.keys(c.aparte).map(a => a + " (aparte)"));
+  const appsMega = r.appsMega.concat(Object.keys(c.aparte).filter(a => !r.appsMega.includes(a)).map(a => a + " (aparte)"));
+  const filas = [
+    ["Internet y TV", fmt(num(c.gasto)), fmt(r.precioPromo) + (r.p.domicilia ? " promo" : "")],
+    ["Apps por aparte", fmt(r.aparteTotal), fmt(r.aparteResto)]
+  ];
+  if(r.conMovil) filas.push(["Celular", fmt(r.celular), fmt(r.movil.reduce((s,e) => s + e.precio*e.qty, 0))]);
+  const otros = r.extras.filter(e => e.grupo !== "movil").reduce((s,e) => s + e.precio*e.qty, 0);
+  if(otros) filas.push(["Extras MEGA", "—", fmt(otros)]);
+  filas.push(["Al mes", `<b>${fmt(r.actual)}</b>`, fmt(r.precioMes) + (r.p.domicilia ? " (promoción)" : "")]);
+  filas.push(["En 13 meses", `<b>${fmt(r.actual13)}</b>`, fmt(r.mega13)]);
+  filas.push(["Desde el mes 14", fmt(r.actual), fmt(r.mes14 + r.aparteResto)]);
+  filas.push(["Velocidad", (num(c.velocidad) || "—") + " megas", velTxt(r.pkg.velocidad) + (r.pkg.simetrico ? " simétricos" : "")]);
+  filas.push(["Televisión", c.tv ? "Sí" : "No", r.megaTv ? "Sí, Xview+" : "No"]);
+  filas.push(["Apps", appsHoy.length ? esc(appsHoy.join(", ")) : "Ninguna", appsMega.length ? esc(appsMega.join(", ")) : "Ninguna"]);
+  filas.push(["Para empezar", num(c.instalacion) ? fmt(num(c.instalacion)) + " instalación" : "—", `${fmt(r.ant)} anticipo, instalación $0`]);
+  $("cmp").innerHTML = `<thead><tr><th></th><th>Hoy · ${esc(c.compania)}</th><th>Con MEGA</th></tr></thead><tbody>` +
+    filas.map(([k,a,b]) => `<tr><td>${k}</td><td>${a}</td><td class="mega">${b}</td></tr>`).join("") + `</tbody>`;
+  const v = [];
+  if(!r.actual) v.push(["warn","dn","Captura cuánto paga hoy el cliente para calcular su ahorro."]);
+  else {
+    if(r.ahorro13 > 0) v.push(["good","up",`Ahorra ${fmt(r.ahorro13)} en 13 meses (promedio ${fmt(r.ahorro13/HORIZONTE)} al mes).`]);
+    else if(r.ahorro13 < 0) v.push(["warn","dn",`En 13 meses paga ${fmt(-r.ahorro13)} más que hoy.`]);
+    if(r.ahorro14 > 0) v.push(["good","up",`Desde el mes 14 sigue ahorrando ${fmt(r.ahorro14)} al mes.`]);
+    else if(r.ahorro14 < 0) v.push(["warn","dn",`Desde el mes 14 paga ${fmt(-r.ahorro14)} más al mes que hoy.`]);
+  }
+  v.push(["good","up",`Empieza con ${fmt(r.ant)} y el resto del primer mes es gratis.`]);
+  const sv = soloVisibles(r);
+  if(sv.length) v.push(["good","up",`En ${sv.length > 1 ? "los meses" : "el mes"} ${mesesY(sv)} solo paga internet (${sv.map(m => fmt(r.meses[m-1].monto)).join(" y ")}).`]);
+  const vc = num(c.velocidad), vm = r.pkg.velocidad;
+  if(vc && vm > vc){ const x = vm / vc; v.push(["good","up", x >= 1.5 ? `${(Math.round(x*10)/10).toString().replace(".", ",")} veces más velocidad (${vc} → ${vm} megas).` : `Más velocidad: ${vc} → ${vm} megas.`]); }
+  else if(vc && vm === vc) v.push(["warn","eq",`Misma velocidad: ${vc} megas.`]);
+  else if(vc) v.push(["bad","dn",`Menos velocidad: ${vc} → ${vm} megas.`]);
+  if(r.pkg.simetrico) v.push(["good","up","Internet simétrico: sube igual de rápido que baja."]);
+  if(r.cubiertas.length) v.push(["good","up",`Deja de pagar aparte ${r.cubiertas.join(" y ")}.`]);
+  const nuevas = r.appsMega.filter(a => !c.apps.includes(a) && !(a in c.aparte));
+  if(nuevas.length) v.push(["good","up",`Gana ${nuevas.join(" y ")}.`]);
+  const pierde = c.apps.filter(a => !r.appsMega.includes(a));
+  if(pierde.length) v.push(["warn","dn",`Hoy su paquete incluye ${pierde.join(", ")}; con esta propuesta no viene.`]);
+  if(!c.tv && r.megaTv) v.push(["good","up","Agrega televisión con Xview+."]);
+  if(c.tv && !r.megaTv) v.push(["bad","dn","Hoy tiene TV y la propuesta no la incluye."]);
+  if(r.conMovil && !num(c.celular)) v.push(["warn","dn","Agregaste Mega móvil: captura cuánto paga hoy de celular para que la comparación sea justa."]);
+  r.extras.filter(e => e.soloDoble && r.pkg.tipo === "triple").forEach(e => v.push(["bad","dn",`${e.nombre} ya viene incluido en el Triple; quítalo de los extras.`]));
+  if(r.pendientes.length) v.push(["warn","dn",`Falta el precio de: ${r.pendientes.map(e => e.nombre).join(", ")}. Defínelo en Mi catálogo.`]);
+  $("verd").innerHTML = v.map(([k,i,t]) => `<div class="v ${k}">${ICON[i]}<span>${esc(t)}</span></div>`).join("");
+}
+
+/* ---------- editor de catálogo ---------- */
+function renderCatalog(){
+  $("kAsesor").value = cat.asesor; $("kAnticipo").value = cat.anticipo; $("kNota").value = cat.nota || "";
+  $("kMesesD").value = promoMeses("doble"); $("kMesesT").value = promoMeses("triple"); $("kSolo").value = soloInt().join(", ");
+  $("kPkgs").innerHTML = cat.paquetes.map((k,i) => `<tr>
+    <td><select id="kp-t-${k.id}" data-i="${i}" data-f="tipo" aria-label="Tipo"><option value="doble"${k.tipo==="doble"?" selected":""}>Doble</option><option value="triple"${k.tipo==="triple"?" selected":""}>Triple Xview+</option></select></td>
+    <td><input type="number" id="kp-v-${k.id}" data-i="${i}" data-f="velocidad" value="${k.velocidad}" min="0" style="width:90px" aria-label="Megas"></td>
+    <td><input type="number" id="kp-p-${k.id}" data-i="${i}" data-f="promo" value="${k.promo}" min="0" style="width:100px" aria-label="Precio promocional domiciliado"></td>
+    <td><input type="number" id="kp-o-${k.id}" data-i="${i}" data-f="original" value="${k.original}" min="0" style="width:100px" aria-label="Precio original"></td>
+    <td><input type="checkbox" id="kp-s-${k.id}" data-i="${i}" data-f="simetrico" ${k.simetrico ? "checked" : ""} aria-label="Simétrico"></td>
+    <td><input type="text" id="kp-a-${k.id}" data-i="${i}" data-f="apps" value="${esc(k.apps.join(", "))}" aria-label="Apps incluidas"></td>
+    <td><input type="text" id="kp-n-${k.id}" data-i="${i}" data-f="nota" value="${esc(k.nota || "")}" aria-label="Nota"></td>
+    <td><button class="del" type="button" data-del="${i}">Quitar</button></td></tr>`).join("");
+  $("kExtras").innerHTML = cat.extras.map((e,i) => `<tr>
+    <td><select id="ke-g-${e.id}" data-i="${i}" data-f="grupo" aria-label="Grupo">${Object.keys(GRUPOS).map(g => `<option value="${g}"${(e.grupo||"otro")===g?" selected":""}>${GRUPOS[g]}</option>`).join("")}</select></td>
+    <td><input type="text" id="ke-n-${e.id}" data-i="${i}" data-f="nombre" value="${esc(e.nombre)}" aria-label="Nombre del extra"></td>
+    <td><input type="number" id="ke-p-${e.id}" data-i="${i}" data-f="precio" value="${e.precio}" min="0" style="width:100px" aria-label="Precio mensual"></td>
+    <td><input type="number" id="ke-p2-${e.id}" data-i="${i}" data-f="precio2" value="${e.precio2 || ""}" min="0" style="width:100px" placeholder="Igual" aria-label="Precio desde el mes 7"></td>
+    <td><input type="checkbox" id="ke-st-${e.id}" data-i="${i}" data-f="soloTriple" ${e.soloTriple ? "checked" : ""} aria-label="Solo con Triple"></td>
+    <td><input type="text" id="ke-d-${e.id}" data-i="${i}" data-f="detalle" value="${esc(e.detalle || "")}" aria-label="Detalle"></td>
+    <td><input type="text" id="ke-c-${e.id}" data-i="${i}" data-f="cubre" value="${esc((e.cubre || []).join(", "))}" aria-label="Apps que cubre"></td>
+    <td><input type="checkbox" id="ke-t-${e.id}" data-i="${i}" data-f="tv" ${e.tv ? "checked" : ""} aria-label="Cuenta como TV"></td>
+    <td><button class="del" type="button" data-del="${i}">Quitar</button></td></tr>`).join("");
+  wireTable($("kPkgs"), cat.paquetes);
+  wireTable($("kExtras"), cat.extras);
+}
+function wireTable(tb, arr){
+  tb.querySelectorAll("input, select").forEach(inp => inp.addEventListener(inp.type === "checkbox" || inp.tagName === "SELECT" ? "change" : "input", () => {
+    const o = arr[+inp.dataset.i], f = inp.dataset.f;
+    if(inp.type === "checkbox") o[f] = inp.checked;
+    else if(f === "apps" || f === "cubre") o[f] = inp.value.split(",").map(s => s.trim()).filter(Boolean);
+    else if(["precio","precio2","velocidad","promo","original"].includes(f)) o[f] = num(inp.value);
+    else o[f] = inp.value;
+    saveCat(); renderPaquete(); renderExtras();
+  }));
+  tb.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => { arr.splice(+b.dataset.del, 1); saveCat(); renderAll(); }));
+}
+$("kAsesor").addEventListener("input", e => { cat.asesor = e.target.value; saveCat(); });
+$("kAnticipo").addEventListener("input", e => { cat.anticipo = num(e.target.value); saveCat(); renderResults(); });
+$("kNota").addEventListener("input", e => { cat.nota = e.target.value; saveCat(); });
+$("kMesesD").addEventListener("input", e => { const n = Math.round(num(e.target.value)); if(!n) return; cat.mesesPromoDoble = n; saveCat(); renderPaquete(); });
+$("kMesesT").addEventListener("input", e => { const n = Math.round(num(e.target.value)); if(!n) return; cat.mesesPromoTriple = n; saveCat(); renderPaquete(); });
+$("kSolo").addEventListener("input", e => { cat.mesesSoloInternet = e.target.value.split(/[,\sy]+/).map(s => Math.round(num(s))).filter(Boolean); saveCat(); renderResults(); });
+$("addPkg").addEventListener("click", () => { cat.paquetes.push({id:uid("p"), tipo:"doble", velocidad:0, promo:0, original:0, simetrico:true, apps:[], nota:""}); saveCat(); renderCatalog(); });
+$("addExtra").addEventListener("click", () => { cat.extras.push({id:uid("e"), grupo:"app", nombre:"Nueva app", precio:0, detalle:"", tv:false, cubre:[]}); saveCat(); renderCatalog(); renderExtras(); });
+
+/* ---------- eventos de captura ---------- */
+function touch(){ if(isExample){ isExample = false; $("exBadge").hidden = true; } $("preview").hidden = true; }
+$("cNombre").addEventListener("input", e => { st.cliente.nombre = e.target.value; touch(); });
+$("cCompania").addEventListener("change", e => { st.cliente.compania = e.target.value; touch(); renderResults(); });
+[["cGasto","gasto"],["cVel","velocidad"],["cInst","instalacion"],["cCel","celular"]].forEach(([id,f]) => $(id).addEventListener("input", e => { st.cliente[f] = num(e.target.value); touch(); renderResults(); }));
+$("tvSi").addEventListener("click", () => { st.cliente.tv = true; touch(); renderCliente(); });
+$("tvNo").addEventListener("click", () => { st.cliente.tv = false; touch(); renderCliente(); });
+$("btnNueva").addEventListener("click", () => {
+  st = {cliente:{nombre:"", compania:"izzi", gasto:0, velocidad:0, instalacion:0, celular:0, tv:false, apps:[], aparte:{}}, propuesta:{tipo:"triple", velocidad:200, domicilia:true, extras:{}}};
+  isExample = false; $("exBadge").hidden = true; $("preview").hidden = true; $("imgStatus").textContent = "";
+  renderAll(); $("cNombre").focus();
+});
+
+/* ---------- imágenes para compartir ---------- */
+const IMG = {bg:"#EAF1FB", ink:"#0A1F4D", navy:"#0A2766", blue:"#0B5ED7", teal:"#2EE6C9", tealInk:"#05332D", muted:"#4A5878",
+  yellow:"#FFD43B", yellowSoft:"#FFF3BF", gray:"#E1E8F3", grayInk:"#5A6782", red:"#D62828", redSoft:"#FDE3E3", promoLine:"#C9D6EE"};
+const DF = "Archivo, Sora, sans-serif", BF = "Figtree, sans-serif";
+async function loadFonts(){
+  try{ await document.fonts.ready; await Promise.all(["900 40px Archivo","800 40px Archivo","700 20px Figtree","600 20px Figtree","500 20px Figtree"].map(f => document.fonts.load(f))); }catch(e){}
+}
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function wrapText(ctx, text, x, y, maxW, lh, maxLines){
+  const words = String(text).split(" "); let line = "", lines = [];
+  for(const w of words){ const t = line ? line + " " + w : w; if(ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+  if(line) lines.push(line);
+  if(maxLines && lines.length > maxLines){ lines = lines.slice(0, maxLines); lines[maxLines-1] = lines[maxLines-1].replace(/\s*\S*$/, "…"); }
+  lines.forEach((l,i) => ctx.fillText(l, x, y + i*lh));
+  return lines.length * lh;
+}
+function fitFont(ctx, text, weight, size, family, maxW){
+  let s = size; ctx.font = `${weight} ${s}px ${family}`;
+  while(ctx.measureText(text).width > maxW && s > 12){ s -= 1; ctx.font = `${weight} ${s}px ${family}`; }
+  return s;
+}
+function lienzo(){
+  const cv = document.createElement("canvas"); cv.width = 1080; cv.height = 1350;
+  const x = cv.getContext("2d"); x.fillStyle = IMG.bg; x.fillRect(0,0,1080,1350); x.textBaseline = "top";
+  return [cv, x];
+}
+function encabezado(x, pill){
+  x.fillStyle = IMG.ink; x.font = `900 50px ${DF}`; x.fillText("MEGA", 72, 62);
+  x.font = `800 28px ${DF}`; const w = x.measureText(pill).width + 56;
+  x.fillStyle = IMG.blue; rr(x, 1008-w, 58, w, 56, 28); x.fill();
+  x.fillStyle = "#FFFFFF"; x.fillText(pill, 1008-w+28, 71);
+}
+function icono(x, cx, cy, kind){
+  x.beginPath(); x.arc(cx, cy, 20, 0, Math.PI*2);
+  x.fillStyle = kind === "bad" ? IMG.redSoft : kind === "mega" ? IMG.teal : "#E4EAF4"; x.fill();
+  x.lineWidth = 3; x.lineCap = "round"; x.lineJoin = "round";
+  x.strokeStyle = kind === "bad" ? IMG.red : kind === "mega" ? IMG.navy : IMG.grayInk;
+  x.beginPath();
+  if(kind === "bad"){ x.moveTo(cx-7,cy-7); x.lineTo(cx+7,cy+7); x.moveTo(cx+7,cy-7); x.lineTo(cx-7,cy+7); }
+  else { x.moveTo(cx-8,cy+1); x.lineTo(cx-2,cy+7); x.lineTo(cx+9,cy-6); }
+  x.stroke();
+}
+function boton(x, y){
+  x.fillStyle = IMG.blue; rr(x, 72, y, 450, 74, 37); x.fill();
+  x.fillStyle = "#FFFFFF"; x.font = `800 34px ${DF}`; x.textAlign = "center"; x.fillText("Cotiza por WhatsApp", 297, y+19); x.textAlign = "left";
+}
+function legalTxt(r){
+  const c = r.c, partes = [], sv = soloVisibles(r);
+  if(num(c.gasto)) partes.push(`${c.compania}: ${fmt(r.actual)}/mes${num(c.velocidad) ? " con " + velMb(num(c.velocidad)) : ""}, según el pago actual que nos comparte el cliente.`);
+  const soloTxt = sv.length ? `; ${sv.length > 1 ? "meses" : "mes"} ${mesesY(sv)} solo internet: ${sv.map(m => fmt(r.meses[m-1].monto)).join(" y ")}` : "";
+  partes.push(`MEGA ${tipoTxt(r.pkg.tipo)} ${velMb(r.pkg.velocidad)}: ${fmt(r.precioPromo)}/mes ${r.p.domicilia ? `domiciliado por ${r.N} meses` : "sin domiciliar"} (mes 1: anticipo de ${fmt(r.ant)}, resto del mes gratis; mes 2: ${fmt(r.meses[1].monto)} con el anticipo descontado${soloTxt}), después ${fmt(r.pkg.original)}/mes.`);
+  if(r.extras.length) partes.push(`Con ${r.extras.map(e => (e.qty > 1 ? e.qty + " " : "") + e.nombre).join(", ")}.`);
+  if(r.pkg.apps.length) partes.push(`Incluye ${listaY(r.pkg.apps)}.`);
+  partes.push("Precios con IVA incluido. Sujeto a cobertura en Cancún.");
+  if(cat.nota) partes.push(cat.nota);
+  return partes.join(" ");
+}
+
+async function drawComparativa(){
+  await loadFonts();
+  const r = calc(), c = r.c, [cv, x] = lienzo();
+  encabezado(x, "compara");
+  const vc = num(c.velocidad), vm = r.pkg.velocidad;
+  const titulo = r.actual > 0 ? (vc ? `¿Pagas ${fmt(r.actual)} por ${vc} megas?` : `¿Pagas ${fmt(r.actual)} al mes?`) : "¿Cuánto pagas hoy?";
+  x.fillStyle = IMG.ink; x.font = `900 74px ${DF}`;
+  let y = 142; y += wrapText(x, titulo, 72, y, 880, 76, 2) + 8;
+  x.fillStyle = IMG.muted; x.font = `500 32px ${BF}`;
+  x.fillText(r.actual > 0 && r.ahorro13 > 0 ? "Con MEGA pagas menos y te llevas más." : "Con MEGA te llevas más.", 72, y);
+  y += 58;
+
+  const filas = [];
+  filas.push(["Velocidad", vc ? velMb(vc) : "—", vc && vm > vc ? "bad" : "ok", velMb(vm), !vc || vm >= vc ? "mega" : "ok"]);
+  filas.push(["Televisión", c.tv ? "Sí" : "No incluye", c.tv ? "ok" : "bad", r.megaTv ? "Xview+" : "No incluye", r.megaTv ? "mega" : "ok"]);
+  if(r.appsMega.length && r.appsMega.length <= 2){
+    r.appsMega.forEach(a => {
+      const tiene = c.apps.includes(a), aparte = a in c.aparte;
+      filas.push([a, tiene ? "Sí" : (aparte ? "Aparte " + fmt(num(c.aparte[a])) : "No incluye"), tiene ? "ok" : "bad", "Incluido", "mega"]);
+    });
+  } else if(r.appsMega.length){
+    filas.push(["Apps", c.apps.length ? c.apps.length + (c.apps.length > 1 ? " incluidas" : " incluida") : "No incluye", c.apps.length >= r.appsMega.length ? "ok" : "bad", r.appsMega.length + " incluidas", "mega"]);
+  }
+  filas.push(["Pagas al mes", r.actual ? fmt(r.actual) : "—", r.actual > r.precioMes ? "bad" : "ok", fmt(r.precioMes), !r.actual || r.precioMes <= r.actual ? "mega" : "ok"]);
+
+  const AX = 288, AW = 320, BX = 624, BW = 384, RH = 74, HH = 124, TH = 120;
+  const top = y, filasY = top + HH, finFilas = filasY + filas.length*RH;
+  x.fillStyle = IMG.gray; rr(x, AX, top+24, AW, finFilas + TH - 8 - (top+24), 24); x.fill();
+  x.fillStyle = "#FFFFFF"; rr(x, AX, top+24, AW, finFilas - (top+24), 24); x.fill(); x.fillRect(AX, finFilas-24, AW, 24);
+  x.fillStyle = IMG.navy; rr(x, BX, top, BW, finFilas + TH - top, 28); x.fill();
+  x.fillStyle = IMG.blue; rr(x, BX, top, BW, finFilas - top, 28); x.fill(); x.fillRect(BX, finFilas-28, BW, 28);
+
+  x.fillStyle = "#3C4A66"; fitFont(x, c.compania, 800, 40, DF, AW-56); x.fillText(c.compania, AX+28, top+46);
+  x.fillStyle = IMG.muted; x.font = `500 22px ${BF}`; x.fillText("Lo que pagas hoy", AX+28, top+92);
+  x.fillStyle = "#FFFFFF"; x.font = `900 46px ${DF}`; x.fillText("MEGA", BX+28, top+18);
+  if(r.actual > 0 && r.precioMes < r.actual){
+    x.font = `700 22px ${BF}`; const pw = x.measureText("Pagas menos").width + 32;
+    x.fillStyle = IMG.teal; rr(x, BX+BW-24-pw, top+22, pw, 40, 20); x.fill();
+    x.fillStyle = IMG.navy; x.fillText("Pagas menos", BX+BW-24-pw+16, top+31);
+  }
+  x.fillStyle = "#FFFFFF"; x.font = `700 22px ${BF}`;
+  x.fillText(`${tipoTxt(r.pkg.tipo)} ${velMb(vm)}`, BX+28, top+72);
+  x.fillText(`${fmt(r.precioPromo)}/mes${r.p.domicilia ? " domiciliado" : ""}`, BX+28, top+98);
+
+  filas.forEach(([lab, a, ka, b, kb], i) => {
+    const ry = filasY + i*RH, cy = ry + RH/2;
+    x.fillStyle = "#E8EDF5"; x.fillRect(AX, ry, AW, 2);
+    x.fillStyle = "rgba(255,255,255,0.18)"; x.fillRect(BX, ry, BW, 2);
+    x.fillStyle = IMG.ink; fitFont(x, lab, 500, 30, BF, 200); x.fillText(lab, 72, cy-17);
+    icono(x, AX+48, cy, ka);
+    x.fillStyle = "#2B3858"; fitFont(x, a, 600, 30, BF, AW-104); x.fillText(a, AX+82, cy-17);
+    icono(x, BX+48, cy, kb);
+    x.fillStyle = "#FFFFFF"; fitFont(x, b, 800, 32, DF, BW-110); x.fillText(b, BX+82, cy-18);
+  });
+  x.fillStyle = IMG.ink; x.font = `800 32px ${DF}`; wrapText(x, "En 13 meses", 72, finFilas+28, 190, 36, 2);
+  x.fillStyle = IMG.grayInk; fitFont(x, r.actual ? fmt(r.actual13) : "—", 900, 64, DF, AW-56); x.fillText(r.actual ? fmt(r.actual13) : "—", AX+28, finFilas+26);
+  x.fillStyle = "#FFFFFF"; fitFont(x, fmt(r.mega13), 900, 70, DF, BW-56); x.fillText(fmt(r.mega13), BX+28, finFilas+16);
+  x.fillStyle = "#CFE0FF"; x.font = `600 22px ${BF}`; x.fillText(`Promedio ${fmt(r.promedio13)} al mes`, BX+28, finFilas+88);
+
+  const sy = finFilas + TH + 22;
+  x.fillStyle = "#FFFFFF"; rr(x, 72, sy, 936, 130, 28); x.fill();
+  x.fillStyle = IMG.teal; rr(x, 104, sy+22, 220, 86, 18); x.fill();
+  x.fillStyle = IMG.tealInk; x.textAlign = "center";
+  const ahorra = r.actual > 0 && r.ahorro13 > 0;
+  x.font = `600 22px ${BF}`; x.fillText(ahorra ? "Te ahorras" : "Promedio", 214, sy+30);
+  fitFont(x, ahorra ? fmt(r.ahorro13) : fmt(r.promedio13), 900, 46, DF, 196); x.fillText(ahorra ? fmt(r.ahorro13) : fmt(r.promedio13), 214, sy+56);
+  x.textAlign = "left";
+  const g = ganancias(r), con = g.length ? `, con ${listaY(g)}` : "";
+  const texto = ahorra
+    ? `en 13 meses${con}. Empiezas con solo ${fmt(r.ant)}${r.ahorro14 > 0 ? ` y desde el mes 14 sigues pagando ${fmt(r.ahorro14)} menos.` : "."}`
+    : `al mes en tus primeros 13 meses${con}. Empiezas con solo ${fmt(r.ant)}.`;
+  x.fillStyle = IMG.ink; x.font = `600 26px ${BF}`; wrapText(x, texto, 350, sy+18, 630, 32, 3);
+
+  const by = sy + 130 + 20;
+  boton(x, by);
+  x.fillStyle = IMG.ink; x.font = `700 24px ${BF}`; x.fillText(`${cat.asesor || "Tu asesor"} · asesor MEGA`, 550, by + (c.nombre ? 10 : 24));
+  if(c.nombre){ x.fillStyle = IMG.muted; x.font = `500 21px ${BF}`; x.fillText(`Cotización para ${c.nombre}`, 550, by+42); }
+  const ly = by + 74 + 20;
+  x.fillStyle = IMG.muted; x.font = `500 17px ${BF}`; wrapText(x, legalTxt(r), 72, ly, 936, 21, Math.max(1, Math.floor((1340-ly)/21)));
+  return cv;
+}
+
+async function drawMesAMes(){
+  await loadFonts();
+  const r = calc(), c = r.c, [cv, x] = lienzo();
+  encabezado(x, "sin sorpresas");
+  x.fillStyle = IMG.ink; x.font = `900 80px ${DF}`;
+  let y = 140; y += wrapText(x, "¿Cuánto pagas mes a mes?", 72, y, 880, 82, 2) + 6;
+  x.fillStyle = IMG.muted; x.font = `500 32px ${BF}`;
+  x.fillText(`${tipoTxt(r.pkg.tipo)} ${velMb(r.pkg.velocidad)} · ${r.p.domicilia ? `promoción ${r.N} meses` : "sin domiciliar"}`, 72, y);
+  y += 58;
+
+  const gap = 12, cw = (936 - 6*gap)/7, ch = 128;
+  const estilo = {
+    anticipo:{fill:IMG.yellow, ink:IMG.navy, sub:IMG.navy},
+    ajuste:{fill:IMG.yellowSoft, ink:IMG.navy, sub:IMG.navy, line:IMG.yellow},
+    promo:{fill:"#FFFFFF", ink:IMG.navy, sub:IMG.navy, line:IMG.promoLine},
+    solo:{fill:IMG.teal, ink:IMG.tealInk, sub:IMG.tealInk},
+    regular:{fill:IMG.navy, ink:"#FFFFFF", sub:"#BFD3F5"}
+  };
+  r.meses.forEach((m, i) => {
+    const col = i % 7, fila = Math.floor(i / 7), cx = 72 + col*(cw+gap), cy = y + fila*(ch+gap), s = estilo[m.tipo];
+    x.fillStyle = s.fill; rr(x, cx, cy, cw, ch, 18); x.fill();
+    if(s.line){ x.strokeStyle = s.line; x.lineWidth = 3; rr(x, cx+1.5, cy+1.5, cw-3, ch-3, 17); x.stroke(); }
+    x.textAlign = "center"; const mid = cx + cw/2;
+    x.fillStyle = s.ink; x.font = `600 20px ${BF}`; x.fillText(i === HORIZONTE ? "Mes 14+" : "Mes " + m.m, mid, cy+20);
+    fitFont(x, fmt(m.monto), 900, 38, DF, cw-14); x.fillText(fmt(m.monto), mid, cy+48);
+    x.fillStyle = s.sub; fitFont(x, etiquetaMes(r, m), 600, 16, BF, cw-10); x.fillText(etiquetaMes(r, m), mid, cy+96);
+    x.textAlign = "left";
+  });
+  y += 2*ch + gap + 26;
+
+  const tipos = new Set(r.meses.map(m => m.tipo));
+  const primero = t => r.meses.find(m => m.tipo === t);
+  const leyenda = [[IMG.yellow, null, `Anticipo ${fmt(r.ant)}, resto del mes gratis`]];
+  if(tipos.has("promo")) leyenda.push(["#FFFFFF", IMG.promoLine, `Promoción ${fmt(primero("promo").monto)}`]);
+  if(tipos.has("solo")) leyenda.push([IMG.teal, null, "Solo pagas internet"]);
+  if(tipos.has("regular")) leyenda.push([IMG.navy, null, `Precio regular ${fmt(primero("regular").monto)}`]);
+  let lx = 72; x.font = `500 25px ${BF}`;
+  leyenda.forEach(([fill, line, txt]) => {
+    const w = 38 + x.measureText(txt).width + 28;
+    if(lx + w > 1008){ lx = 72; y += 44; }
+    x.fillStyle = fill; rr(x, lx, y+4, 26, 26, 6); x.fill();
+    if(line){ x.strokeStyle = line; x.lineWidth = 2; rr(x, lx+1, y+5, 24, 24, 5); x.stroke(); }
+    x.fillStyle = IMG.ink; x.fillText(txt, lx+38, y+3);
+    lx += w;
+  });
+  y += 58;
+
+  x.fillStyle = IMG.blue; rr(x, 72, y, 936, 150, 30); x.fill();
+  x.fillStyle = "#FFFFFF"; x.font = `700 28px ${BF}`; x.fillText("Total de tus primeros 13 meses", 108, y+28);
+  fitFont(x, fmt(r.recibos13), 900, 84, DF, 520); x.fillText(fmt(r.recibos13), 108, y+62);
+  const pr = fmt(r.promedioRecibo);
+  x.font = `900 46px ${DF}`; const prW = x.measureText(pr).width; x.font = `700 24px ${BF}`; const mesW = x.measureText("/mes").width;
+  const bw = Math.max(240, prW + mesW + 56), bx = 1008-36-bw;
+  x.fillStyle = IMG.navy; rr(x, bx, y+26, bw, 98, 20); x.fill();
+  x.fillStyle = "#CFE0FF"; x.font = `600 22px ${BF}`; x.textAlign = "right"; x.fillText("Promedio real", bx+bw-24, y+38);
+  x.fillStyle = "#FFFFFF"; x.font = `700 24px ${BF}`; x.fillText("/mes", bx+bw-24, y+82);
+  x.font = `900 46px ${DF}`; x.fillText(pr, bx+bw-24-mesW-4, y+66); x.textAlign = "left";
+  y += 150 + 22;
+
+  x.fillStyle = "#FFFFFF"; rr(x, 72, y, 936, 190, 28); x.fill();
+  const badge = (l1, l2, val) => {
+    x.fillStyle = IMG.teal; rr(x, 724, y+24, 252, 142, 22); x.fill();
+    x.fillStyle = IMG.tealInk; x.textAlign = "center"; x.font = `600 22px ${BF}`;
+    x.fillText(l1, 850, y+40); if(l2) x.fillText(l2, 850, y+66);
+    fitFont(x, val, 900, 52, DF, 228); x.fillText(val, 850, y+(l2 ? 96 : 76)); x.textAlign = "left";
+  };
+  if(r.actual > 0){
+    x.fillStyle = IMG.blue; fitFont(x, `Comparado con lo que pagas hoy`, 800, 32, DF, 600); x.fillText("Comparado con lo que pagas hoy", 108, y+26);
+    const filasW = [[`Hoy con ${c.compania}`, fmt(r.actual) + "/mes", false], ["En 13 meses hoy", fmt(r.actual13), false], ["En 13 meses con MEGA", fmt(r.mega13), true]];
+    filasW.forEach(([a, b, fuerte], i) => {
+      const ry = y + 78 + i*34;
+      if(fuerte){ x.fillStyle = "#D5DFEE"; x.fillRect(108, ry-6, 584, 2); }
+      x.fillStyle = IMG.ink; x.font = `${fuerte ? 700 : 500} 25px ${BF}`; x.fillText(a, 108, ry);
+      x.textAlign = "right"; x.font = `700 25px ${BF}`; x.fillText(b, 692, ry); x.textAlign = "left";
+    });
+    if(r.ahorro13 > 0) badge("En 13 meses te", "ahorras", fmt(r.ahorro13));
+    else badge("Promedio con", "MEGA", fmt(r.promedio13));
+  } else {
+    x.fillStyle = IMG.blue; x.font = `800 32px ${DF}`; x.fillText("Incluido en tu paquete", 108, y+26);
+    const items = [`Internet ${velMb(r.pkg.velocidad)}${r.pkg.simetrico ? " simétrico" : ""}`];
+    if(r.megaTv) items.push("TV con Xview+");
+    if(r.appsMega.length) items.push(listaY(r.appsMega));
+    items.slice(0, 3).forEach((t, i) => { icono(x, 128, y+94+i*34, "mega"); x.fillStyle = IMG.ink; fitFont(x, t, 500, 25, BF, 540); x.fillText(t, 160, y+80+i*34); });
+    badge("Desde el mes 14", "", fmt(r.mes14));
+  }
+  y += 190 + 22;
+
+  boton(x, y);
+  x.fillStyle = IMG.ink; x.font = `600 26px ${BF}`;
+  wrapText(x, `Desde el mes 14 pagas ${fmt(r.mes14)} fijos${r.pkg.apps.length ? ", con todo incluido" : ""}.`, 550, y+6, 450, 32, 2);
+  const ly = y + 74 + 18;
+  x.fillStyle = IMG.muted; x.font = `500 17px ${BF}`; wrapText(x, legalTxt(r), 72, ly, 936, 21, Math.max(1, Math.floor((1340-ly)/21)));
+  return cv;
+}
+
+let lastBlob = null, lastKind = "comparativa";
+async function generar(kind){
+  $("imgStatus").textContent = "Generando imagen…";
+  const cv = kind === "mes-a-mes" ? await drawMesAMes() : await drawComparativa();
+  cv.toBlob(b => {
+    lastBlob = b; lastKind = kind;
+    $("previewImg").src = URL.createObjectURL(b);
+    $("preview").hidden = false;
+    $("imgStatus").textContent = kind === "mes-a-mes" ? "Imagen mes a mes lista." : "Imagen comparativa lista.";
+  }, "image/png");
+}
+$("btnImgCmp").addEventListener("click", () => generar("comparativa"));
+$("btnImgMes").addEventListener("click", () => generar("mes-a-mes"));
+$("btnSave").addEventListener("click", () => {
+  if(!lastBlob) return;
+  const name = "mega-" + lastKind + (st.cliente.nombre ? "-" + st.cliente.nombre.toLowerCase().replace(/[^a-z0-9áéíóúñ]+/gi,"-") : "") + ".png";
+  descargar(lastBlob, name);
+  $("imgStatus").textContent = "Imagen descargada.";
+});
+
+function renderAll(){ renderCliente(); renderPaquete(); renderExtras(); renderCatalog(); }
+renderAll();
+cargarCatalogo();
+})();
+</script>
+</body>
+</html>
