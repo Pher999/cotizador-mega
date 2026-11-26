@@ -143,6 +143,14 @@ details.cat summary::-webkit-details-marker{display:none}
         <span class="step">Paso 1</span>
         <h2 id="h1">Servicio actual del cliente</h2>
         <p class="hint">Lo que hoy paga y recibe con su compañía.</p>
+        <div class="block" style="margin:0 0 16px">
+          <span class="lbl">¿El cliente ya tiene el servicio?</span>
+          <div class="seg" role="group" aria-label="Situación del cliente">
+            <button type="button" class="chip" id="nuevoNo" aria-pressed="true">Ya tiene el servicio</button>
+            <button type="button" class="chip" id="nuevoSi" aria-pressed="false">Va a contratar nuevo</button>
+          </div>
+          <p class="hint" id="nuevoHint" style="margin:0">La instalación no se suma, porque ya la pagó.</p>
+        </div>
         <div class="fields">
           <label class="f">Nombre del cliente (opcional)<input type="text" id="cNombre" placeholder="Araceli"></label>
           <label class="f">Compañía actual
@@ -292,7 +300,7 @@ const DEFAULT_CAT = {
   extras: []
 };
 const EXAMPLE = {
-  cliente:{nombre:"", compania:"Totalplay", gasto:800, velocidad:150, instalacion:0, celular:0, tv:true, apps:[], aparte:{}},
+  cliente:{nombre:"", compania:"Totalplay", gasto:800, velocidad:150, instalacion:0, celular:0, tv:true, nuevo:false, apps:[], aparte:{}},
   propuesta:{tipo:"triple", velocidad:300, domicilia:true, extras:{}}
 };
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -365,6 +373,9 @@ function renderCliente(){
   $("cCel").value = c.celular || "";
   $("tvSi").setAttribute("aria-pressed", c.tv);
   $("tvNo").setAttribute("aria-pressed", !c.tv);
+  $("nuevoSi").setAttribute("aria-pressed", !!c.nuevo);
+  $("nuevoNo").setAttribute("aria-pressed", !c.nuevo);
+  $("nuevoHint").textContent = c.nuevo ? "La instalación de la competencia se suma al total de 13 meses y al ahorro." : "La instalación no se suma, porque ya la pagó.";
   chipGroup($("cAppsIncl"), c.apps, a => { c.apps = c.apps.includes(a) ? c.apps.filter(x => x!==a) : c.apps.concat(a); touch(); renderCliente(); });
   chipGroup($("cAppsAparteSel"), Object.keys(c.aparte), a => { if(a in c.aparte) delete c.aparte[a]; else c.aparte[a] = 0; touch(); renderCliente(); });
   $("cAppsAparteList").innerHTML = Object.keys(c.aparte).map((a,i) =>
@@ -458,11 +469,12 @@ function calc(){
   }
   const recibos13 = meses.slice(0, HORIZONTE).reduce((s,x) => s + x.monto, 0);
   const mega13 = recibos13 + aparteResto*HORIZONTE;
-  const actual13 = actual*HORIZONTE;
+  const instComp = c.nuevo ? num(c.instalacion) : 0;
+  const actual13 = actual*HORIZONTE + instComp;
   const mes14 = meses[HORIZONTE].monto;
   const precioMes = precioPromo + extrasTotal + aparteResto;
   const megaTv = pkg.tipo === "triple" || extras.some(e => e.tv);
-  return {c, p, pkg, N, Nd, solo, dobleIgual, ant, precioPromo, precioMes, extras, extrasTotal, extrasDespues, appsMega, extraApps,
+  return {c, p, pkg, N, Nd, solo, dobleIgual, ant, instComp, precioPromo, precioMes, extras, extrasTotal, extrasDespues, appsMega, extraApps,
     aparteTotal, cubiertas, cubiertasTotal, aparteResto, movil, conMovil, celular, actual, meses, recibos13, mega13, actual13,
     ahorro13: actual13 - mega13, promedio13: mega13/HORIZONTE, promedioRecibo: recibos13/HORIZONTE, mes14, ahorro14: actual - (mes14 + aparteResto),
     megaTv, pendientes: extras.filter(e => !e.precio)};
@@ -494,7 +506,7 @@ const ICON = {
 function renderResults(){
   const r = calc(), c = r.c;
   if(r.actual > 0 && r.ahorro13 > 0){
-    $("hero").innerHTML = `<div class="k">Tu cliente ahorra en 13 meses</div><div class="big">${fmt(r.ahorro13)}</div><div class="sub">Hoy: ${fmt(r.actual13)} en 13 meses · Con MEGA: ${fmt(r.mega13)} (promedio ${fmt(r.promedio13)}/mes)</div>`;
+    $("hero").innerHTML = `<div class="k">Tu cliente ahorra en 13 meses</div><div class="big">${fmt(r.ahorro13)}</div><div class="sub">${c.nuevo ? "Con " + esc(c.compania) + (r.instComp ? " (con instalación)" : "") : "Hoy"}: ${fmt(r.actual13)} en 13 meses · Con MEGA: ${fmt(r.mega13)} (promedio ${fmt(r.promedio13)}/mes)</div>`;
   } else if(r.actual > 0){
     $("hero").innerHTML = `<div class="k">Diferencia en 13 meses</div><div class="big">${r.ahorro13 === 0 ? fmt(0) : "+" + fmt(-r.ahorro13)}</div><div class="sub">Hoy: ${fmt(r.actual13)} · Con MEGA: ${fmt(r.mega13)}. Revisa lo que gana a cambio.</div>`;
   } else {
@@ -518,7 +530,7 @@ function renderResults(){
   filas.push(["Televisión", c.tv ? "Sí" : "No", r.megaTv ? "Sí, Xview+" : "No"]);
   filas.push(["Apps", appsHoy.length ? esc(appsHoy.join(", ")) : "Ninguna", appsMega.length ? esc(appsMega.join(", ")) : "Ninguna"]);
   filas.push(["Para empezar", num(c.instalacion) ? fmt(num(c.instalacion)) + " instalación" : "—", `${fmt(r.ant)} anticipo, instalación $0`]);
-  $("cmp").innerHTML = `<thead><tr><th></th><th>Hoy · ${esc(c.compania)}</th><th>Con MEGA</th></tr></thead><tbody>` +
+  $("cmp").innerHTML = `<thead><tr><th></th><th>${c.nuevo ? "Contratando" : "Hoy"} · ${esc(c.compania)}</th><th>Con MEGA</th></tr></thead><tbody>` +
     filas.map(([k,a,b]) => `<tr><td>${k}</td><td>${a}</td><td class="mega">${b}</td></tr>`).join("") + `</tbody>`;
   const v = [];
   if(!r.actual) v.push(["warn","dn","Captura cuánto paga hoy el cliente para calcular su ahorro."]);
@@ -529,6 +541,8 @@ function renderResults(){
     else if(r.ahorro14 < 0) v.push(["warn","dn",`Desde el mes 14 paga ${fmt(-r.ahorro14)} más al mes que hoy.`]);
   }
   v.push(["good","up",`Empieza con ${fmt(r.ant)} y el resto del primer mes es gratis.`]);
+  if(r.instComp) v.push(["good","up",`Se ahorra la instalación de ${fmt(r.instComp)} que cobraría ${c.compania}; ya va sumada al ahorro.`]);
+  else if(num(c.instalacion) && !c.nuevo) v.push(["warn","eq","La instalación no se suma porque el cliente ya tiene el servicio. Si va a contratar nuevo, cámbialo en el Paso 1."]);
   const sv = soloVisibles(r);
   if(sv.length) v.push(["good","up",`En ${sv.length > 1 ? "los meses" : "el mes"} ${mesesY(sv)} solo paga internet (${sv.map(m => fmt(r.meses[m-1].monto)).join(" y ")}).`]);
   const vc = num(c.velocidad), vm = r.pkg.velocidad;
@@ -602,8 +616,10 @@ $("cCompania").addEventListener("change", e => { st.cliente.compania = e.target.
 [["cGasto","gasto"],["cVel","velocidad"],["cInst","instalacion"],["cCel","celular"]].forEach(([id,f]) => $(id).addEventListener("input", e => { st.cliente[f] = num(e.target.value); touch(); renderResults(); }));
 $("tvSi").addEventListener("click", () => { st.cliente.tv = true; touch(); renderCliente(); });
 $("tvNo").addEventListener("click", () => { st.cliente.tv = false; touch(); renderCliente(); });
+$("nuevoSi").addEventListener("click", () => { st.cliente.nuevo = true; touch(); renderCliente(); });
+$("nuevoNo").addEventListener("click", () => { st.cliente.nuevo = false; touch(); renderCliente(); });
 $("btnNueva").addEventListener("click", () => {
-  st = {cliente:{nombre:"", compania:"izzi", gasto:0, velocidad:0, instalacion:0, celular:0, tv:false, apps:[], aparte:{}}, propuesta:{tipo:"triple", velocidad:200, domicilia:true, extras:{}}};
+  st = {cliente:{nombre:"", compania:"izzi", gasto:0, velocidad:0, instalacion:0, celular:0, tv:false, nuevo:false, apps:[], aparte:{}}, propuesta:{tipo:"triple", velocidad:200, domicilia:true, extras:{}}};
   isExample = false; $("exBadge").hidden = true; $("preview").hidden = true; $("imgStatus").textContent = "";
   renderAll(); $("cNombre").focus();
 });
@@ -656,7 +672,7 @@ function boton(x, y){
 }
 function legalTxt(r){
   const c = r.c, partes = [], sv = soloVisibles(r);
-  if(num(c.gasto)) partes.push(`${c.compania}: ${fmt(r.actual)}/mes${num(c.velocidad) ? " con " + velMb(num(c.velocidad)) : ""}, según el pago actual que nos comparte el cliente.`);
+  if(num(c.gasto)) partes.push(`${c.compania}: ${fmt(r.actual)}/mes${num(c.velocidad) ? " con " + velMb(num(c.velocidad)) : ""}${r.instComp ? ` más instalación de ${fmt(r.instComp)}, según la cotización que nos comparte el cliente.` : ", según el pago actual que nos comparte el cliente."}`);
   const soloTxt = sv.length ? `; ${sv.length > 1 ? "meses" : "mes"} ${mesesY(sv)} solo internet: ${sv.map(m => fmt(r.meses[m-1].monto)).join(" y ")}` : "";
   partes.push(`MEGA ${tipoTxt(r.pkg.tipo)} ${velMb(r.pkg.velocidad)}: ${fmt(r.precioPromo)}/mes ${r.p.domicilia ? `domiciliado por ${r.N} meses` : "sin domiciliar"} (mes 1: anticipo de ${fmt(r.ant)}, resto del mes gratis; mes 2: ${fmt(r.meses[1].monto)} con el anticipo descontado${soloTxt}), después ${fmt(r.pkg.original)}/mes.`);
   if(r.extras.length) partes.push(`Con ${r.extras.map(e => (e.qty > 1 ? e.qty + " " : "") + e.nombre).join(", ")}.`);
@@ -671,7 +687,8 @@ async function drawComparativa(){
   const r = calc(), c = r.c, [cv, x] = lienzo();
   encabezado(x, "compara");
   const vc = num(c.velocidad), vm = r.pkg.velocidad;
-  const titulo = r.actual > 0 ? (vc ? `¿Pagas ${fmt(r.actual)} por ${vc} megas?` : `¿Pagas ${fmt(r.actual)} al mes?`) : "¿Cuánto pagas hoy?";
+  const verbo = c.nuevo ? "¿Vas a pagar" : "¿Pagas";
+  const titulo = r.actual > 0 ? (vc ? `${verbo} ${fmt(r.actual)} por ${vc} megas?` : `${verbo} ${fmt(r.actual)} al mes?`) : "¿Cuánto pagas hoy?";
   x.fillStyle = IMG.ink; x.font = `900 74px ${DF}`;
   let y = 142; y += wrapText(x, titulo, 72, y, 880, 76, 2) + 8;
   x.fillStyle = IMG.muted; x.font = `500 32px ${BF}`;
@@ -689,9 +706,10 @@ async function drawComparativa(){
   } else if(r.appsMega.length){
     filas.push(["Apps", c.apps.length ? c.apps.length + (c.apps.length > 1 ? " incluidas" : " incluida") : "No incluye", c.apps.length >= r.appsMega.length ? "ok" : "bad", r.appsMega.length + " incluidas", "mega"]);
   }
+  if(r.instComp) filas.push(["Instalación", fmt(r.instComp), "bad", "$0", "mega"]);
   filas.push(["Pagas al mes", r.actual ? fmt(r.actual) : "—", r.actual > r.precioMes ? "bad" : "ok", fmt(r.precioMes), !r.actual || r.precioMes <= r.actual ? "mega" : "ok"]);
 
-  const AX = 288, AW = 320, BX = 624, BW = 384, RH = 74, HH = 124, TH = 120;
+  const AX = 288, AW = 320, BX = 624, BW = 384, RH = filas.length > 5 ? 62 : 74, HH = 124, TH = 120;
   const top = y, filasY = top + HH, finFilas = filasY + filas.length*RH;
   x.fillStyle = IMG.gray; rr(x, AX, top+24, AW, finFilas + TH - 8 - (top+24), 24); x.fill();
   x.fillStyle = "#FFFFFF"; rr(x, AX, top+24, AW, finFilas - (top+24), 24); x.fill(); x.fillRect(AX, finFilas-24, AW, 24);
@@ -699,7 +717,7 @@ async function drawComparativa(){
   x.fillStyle = IMG.blue; rr(x, BX, top, BW, finFilas - top, 28); x.fill(); x.fillRect(BX, finFilas-28, BW, 28);
 
   x.fillStyle = "#3C4A66"; fitFont(x, c.compania, 800, 40, DF, AW-56); x.fillText(c.compania, AX+28, top+46);
-  x.fillStyle = IMG.muted; x.font = `500 22px ${BF}`; x.fillText("Lo que pagas hoy", AX+28, top+92);
+  x.fillStyle = IMG.muted; x.font = `500 22px ${BF}`; x.fillText(c.nuevo ? "Lo que pagarías" : "Lo que pagas hoy", AX+28, top+92);
   x.fillStyle = "#FFFFFF"; x.font = `900 46px ${DF}`; x.fillText("MEGA", BX+28, top+18);
   if(r.actual > 0 && r.precioMes < r.actual){
     x.font = `700 22px ${BF}`; const pw = x.measureText("Pagas menos").width + 32;
@@ -815,8 +833,11 @@ async function drawMesAMes(){
     fitFont(x, val, 900, 52, DF, 228); x.fillText(val, 850, y+(l2 ? 96 : 76)); x.textAlign = "left";
   };
   if(r.actual > 0){
-    x.fillStyle = IMG.blue; fitFont(x, `Comparado con lo que pagas hoy`, 800, 32, DF, 600); x.fillText("Comparado con lo que pagas hoy", 108, y+26);
-    const filasW = [[`Hoy con ${c.compania}`, fmt(r.actual) + "/mes", false], ["En 13 meses hoy", fmt(r.actual13), false], ["En 13 meses con MEGA", fmt(r.mega13), true]];
+    const tituloBox = c.nuevo ? `Comparado con contratar ${c.compania}` : "Comparado con lo que pagas hoy";
+    x.fillStyle = IMG.blue; fitFont(x, tituloBox, 800, 32, DF, 600); x.fillText(tituloBox, 108, y+26);
+    const filasW = c.nuevo
+      ? [[`${c.compania} al mes`, fmt(r.actual) + "/mes", false], [r.instComp ? `13 meses + instalación` : `En 13 meses con ${c.compania}`, fmt(r.actual13), false], ["En 13 meses con MEGA", fmt(r.mega13), true]]
+      : [[`Hoy con ${c.compania}`, fmt(r.actual) + "/mes", false], ["En 13 meses hoy", fmt(r.actual13), false], ["En 13 meses con MEGA", fmt(r.mega13), true]];
     filasW.forEach(([a, b, fuerte], i) => {
       const ry = y + 78 + i*34;
       if(fuerte){ x.fillStyle = "#D5DFEE"; x.fillRect(108, ry-6, 584, 2); }
